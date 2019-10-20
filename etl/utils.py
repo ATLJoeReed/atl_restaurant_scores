@@ -52,7 +52,8 @@ def extract_geocodes(data, logger):
             location = geocode['results'][-1]['geometry'].get('location') # noqa
             return {**data, **location}
         else:
-            return {**data, **{'lat': None, 'lng': None}}
+            logger.info('No results found from Google GeoCode API')
+            return None
     else:
         logger.error(f"Making request - status code: {status_code}")
         return None
