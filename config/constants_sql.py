@@ -1,5 +1,19 @@
 #!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
+CHECK_TOKEN = """
+select exists(
+    select 1
+    from restaurants.app_settings
+    where setting_name = %(token_type)s
+        AND setting_value = CRYPT(%(token)s, setting_value)
+);
+"""
+
+FETCH_SCORES = """
+select restaurant, address, city, state, zipcode, score, distance::text
+from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
+""" # noqa
+
 INSERT_INSPECTIONS_SQL = """
 insert into raw.inspections (inspection_id, facility, address, city, 
     state, zipcode, inspection_date, permit_number, score, grade, purpose, 

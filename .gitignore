@@ -9,6 +9,7 @@ __pycache__/
 # App
 settings.py
 .DS_Store
+curl_examples
 
 # Distribution / packaging
 .Python
