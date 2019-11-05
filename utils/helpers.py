@@ -71,10 +71,7 @@ def extract_inspections(url, logger):
 
 
 def get_database_connection():
-    conn = psycopg2.connect(**settings.DB_CONN)
-    cur = conn.cursor()
-    dict_cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    return (conn, cur, dict_cur)
+    return psycopg2.connect(**settings.DB_CONN)
 
 
 def get_date_range():
@@ -87,9 +84,35 @@ def get_date_range():
         )
 
 
+def get_dictionary_cursor(conn):
+    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+
 def get_records2geocode(dict_cur, logger):
     dict_cur.execute(constants_sql.SELECT_GEOCODING_SQL)
     return dict_cur.fetchall()
+
+
+def is_request_valid(app, conn, request):
+    try:
+        request_packet = request.get_json(force=True)
+    except Exception as e:
+        app.logger.debug(f'Error getting request packet: {e}')
+        return None
+    token_type = request_packet.pop('token_type', None)
+    token = request_packet.pop('token', None)
+    if not token_type or not token:
+        return None
+    dict_cur = get_dictionary_cursor(conn)
+    sql_dict = {'token': token, 'token_type': token_type}
+    dict_cur.execute(constants_sql.CHECK_TOKEN, sql_dict)
+    valid_token = dict_cur.fetchone().get('exists')
+    app.logger.debug(valid_token)
+    dict_cur.close()
+    if valid_token:
+        return request_packet
+    else:
+        return None
 
 
 def load_inspections(conn, cur, data, logger):

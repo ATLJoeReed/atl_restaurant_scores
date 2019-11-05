@@ -9,10 +9,13 @@ from utils import helpers
 
 def process_inspections(logger):
     try:
-        conn, cur, dict_cur = helpers.get_database_connection()
+        conn = helpers.get_database_connection()
     except Exception as e:
         logger.error(f"Getting database connection: {e}")
         sys.exit("Unable to get database connection")
+
+    cur = conn.cursor()
+    dict_cur = helpers.get_dictionary_cursor(conn)
 
     url = helpers.build_extract_url(logger)
     logger.info("Starting the extract")
