@@ -10,9 +10,11 @@ select exists(
 """
 
 FETCH_SCORES = """
-select restaurant, address, city, state, zipcode, score, distance::text
+select restaurant, address, city, state, zipcode,
+    to_char(inspection_date, 'MM/DD/YY') as inspection_date,
+    score, distance::text
 from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
-""" # noqa
+"""
 
 INSERT_INSPECTIONS_SQL = """
 insert into raw.inspections (inspection_id, facility, address, city, 
