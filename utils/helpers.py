@@ -10,6 +10,7 @@ import psycopg2.extras
 import requests
 
 from config import constants_sql, settings
+from utils.packet_handler import PacketHandler
 
 
 def build_extract_url(logger):
@@ -103,6 +104,9 @@ def is_request_valid(app, conn, request):
     token_type = request_packet.pop('token_type', None)
     token = request_packet.pop('token', None)
     if not token_type or not token:
+        return None
+    packet_handler = PacketHandler(request_packet, 'get_scores')
+    if not packet_handler.is_valid():
         return None
     valid_token = validate_token(token, token_type, conn)
     app.logger.debug(valid_token)
