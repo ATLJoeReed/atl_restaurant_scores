@@ -1,18 +1,16 @@
 #!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
-CHECK_TOKEN = """
-select exists(
-    select 1
-    from restaurants.app_settings
-    where setting_name = %(token_type)s
-        AND setting_value = CRYPT(%(token)s, setting_value)
-);
+FETCH_HASHED_TOKEN = """
+select setting_value as hashed_token
+from restaurants.app_settings
+where setting_name = %(token_type)s;
 """
 
 FETCH_SCORES = """
-select restaurant, address, city, state, zipcode,
+select
+    restaurant,
     to_char(inspection_date, 'MM/DD/YY') as inspection_date,
-    score, distance::text
+    score
 from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
 """
 
