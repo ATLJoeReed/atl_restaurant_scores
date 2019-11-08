@@ -22,7 +22,7 @@ def teardown_request(exception):
 
 
 class GetRestaurantScores(Resource):
-    def get(self):
+    def post(self):
         request_packet = helpers.is_request_valid(app, g.conn, request)
         app.logger.debug(request_packet)
         if not request_packet:
@@ -39,7 +39,7 @@ class GetRestaurantScores(Resource):
 api.add_resource(
     GetRestaurantScores,
     '/restaurant/api/v1.0/scores',
-    methods=['GET']
+    methods=['POST']
 )
 
 
