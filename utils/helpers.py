@@ -143,6 +143,7 @@ def setup_logger_stdout(logger_name):
 
 
 def validate_token(token, token_type, conn):
+    token = token.encode('utf-8')
     dict_cur = get_dictionary_cursor(conn)
     sql_dict = {'token_type': token_type}
     dict_cur.execute(constants_sql.FETCH_HASHED_TOKEN, sql_dict)
@@ -151,4 +152,4 @@ def validate_token(token, token_type, conn):
     if not results:
         return False
     hashed_token = results.get('hashed_token').encode('utf-8')
-    return bcrypt.hashpw(token.encode('utf-8'), hashed_token) == hashed_token
+    return bcrypt.checkpw(token, hashed_token)
