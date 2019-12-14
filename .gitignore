@@ -10,6 +10,7 @@ __pycache__/
 settings.py
 .DS_Store
 curl_examples.txt
+.vscode
 
 # Distribution / packaging
 .Python
