@@ -4,7 +4,6 @@ import datetime
 import logging
 import sys
 
-import bcrypt
 import psycopg2
 import psycopg2.extras
 import requests
@@ -143,13 +142,9 @@ def setup_logger_stdout(logger_name):
 
 
 def validate_token(token, token_type, conn):
-    token = token.encode('utf-8')
     dict_cur = get_dictionary_cursor(conn)
-    sql_dict = {'token_type': token_type}
-    dict_cur.execute(constants_sql.FETCH_HASHED_TOKEN, sql_dict)
-    results = dict_cur.fetchone()
+    sql_dict = {'token': token, 'token_type': token_type}
+    dict_cur.execute(constants_sql.CHECK_TOKEN, sql_dict)
+    valid_token = dict_cur.fetchone().get('exists')
     dict_cur.close()
-    if not results:
-        return False
-    hashed_token = results.get('hashed_token').encode('utf-8')
-    return bcrypt.checkpw(token, hashed_token)
+    return valid_token

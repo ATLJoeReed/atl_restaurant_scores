@@ -127,3 +127,13 @@ from restaurants.inspections;
 update restaurants.inspections
     set latitude = null,
         longitude = null;
+
+
+-- Token validation
+create extension pgcrypto;
+
+create table restaurants.app_settings (
+    setting_name text,
+    setting_value text
+)
+
