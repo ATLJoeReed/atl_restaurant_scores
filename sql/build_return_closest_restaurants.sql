@@ -1,10 +1,10 @@
--- drop function return_closest_restaurants;
+-- drop function food_inspections.return_closest_restaurants;
 
-CREATE OR REPLACE FUNCTION return_closest_restaurants(
-    IN user_latitude numeric,
-    IN user_longitude numeric,
-    IN num_results integer)
-  RETURNS TABLE(
+create or replace function food_inspections.return_closest_restaurants(
+    in user_latitude numeric,
+    in user_longitude numeric,
+    in num_results integer)
+  returns table(
     restaurant text,
     address text,
     city text,
@@ -14,13 +14,13 @@ CREATE OR REPLACE FUNCTION return_closest_restaurants(
     score int,
     latitude numeric,
     longitude numeric,
-    distance numeric) AS
-$BODY$
-DECLARE
+    distance numeric) as
+$body$
+declare
     ref refcursor;
-  BEGIN
+  begin
 
-  RETURN QUERY
+  return query
     with restaurant_scores as
     (
         select distinct on (a.permit_number)
@@ -35,7 +35,7 @@ DECLARE
             a.longitude,
             cast(earth_distance(ll_to_earth(user_latitude , user_longitude),
                      ll_to_earth(a.latitude, a.longitude)) * .0006213712 as numeric(10,2)) as "distance"
-        from restaurants.inspections as a
+        from food_inspections.vw_inspections as a
         order by a.permit_number, a.inspection_date desc
     )
     select *
@@ -43,12 +43,12 @@ DECLARE
     order by distance asc
     limit num_results;
 
-END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100
-  ROWS 1000;
+end;
+$body$
+  language plpgsql volatile
+  cost 100
+  rows 1000;
 
- -- NOTE: You need to change the owner to your database login...
-ALTER FUNCTION return_closest_restaurants(numeric, numeric, integer)
-  OWNER TO osaevtapyrcflq;
+ -- note: you need to change the owner to your database login...
+alter function food_inspections.return_closest_restaurants(numeric, numeric, integer)
+  owner to dopyjhogbbiriu;

@@ -1,5 +1,0 @@
-5019:7: actual: "cue", expected: value separator (,)
-5021:7: actual: "cue", expected: value separator (,)
-5023:8: actual: "Cue Commissary", expected: value separator (,)
-23733:14: actual: "s Kitchen", expected: value separator (,)
-23766:28: actual: "s Kitchen Takeout", expected: value separator (,)
