@@ -133,7 +133,7 @@ from food_inspections.vw_inspections;
 --     set latitude = null,
 --         longitude = null;
 
-select * from food_inspections.return_closest_restaurants(33.6880178, -84.42331870000001, 10);
+select * from food_inspections.return_closest_restaurants(33.6880178, -84.42331870000001, 50);
 
 --Home: 33.6880178, -84.42331870000001
 with restaurant_scores as
@@ -155,8 +155,34 @@ with restaurant_scores as
 )
 select *
 from restaurant_scores
+where restaurant ilike '%Landmark%'
 order by distance asc
 limit 200;
+
+
+update food_inspections.fulton_inspections
+    set latitude = %(lat)s,
+        longitude = %(lng)s
+where permit_number = %(permit_number)s
+    and address = %(address)s
+    and city = %(city)s
+    and state = %(state)s
+    and zipcode = %(zipcode)s;
+
+select distinct
+    permit_number,
+    facility,
+    address,
+    city,
+    state,
+    zipcode,
+    latitude,
+    longitude
+from food_inspections.fulton_inspections
+where latitude is not null
+    and longitude is not null
+order by permit_number;
+
 
 
 -- Token validation

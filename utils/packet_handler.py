@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
-from config import constants
+from utils import constants
 
 
 class PacketHandler(object):

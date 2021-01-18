@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 # -*- coding: utf-8 -*-
 import datetime
 import logging
@@ -8,11 +8,11 @@ import psycopg2
 import psycopg2.extras
 import requests
 
-from config import constants_sql, settings
+from utils import constants_sql, settings
 from utils.packet_handler import PacketHandler
 
 
-def build_extract_url(logger):
+def build_extract_violations_url(logger):
     start_date, end_date = get_date_range()
     base_url = settings.SOCRATA_BASE_URL
     url = f"{base_url}$where=date_trunc_ymd(date) between '{start_date}' and '{end_date}'" # noqa
@@ -45,7 +45,11 @@ def check_results(data, fields):
 
 def extract_geocodes(data, logger):
     url = build_geocode_url(data)
-    results = requests.get(url)
+    try:
+        results = requests.get(url)
+    except Exception as e:
+        logger.error(f"Extracting GeoCodes: {e}")
+        return None
     status_code = results.status_code
     if status_code == 200:
         geocode = results.json()
@@ -60,7 +64,7 @@ def extract_geocodes(data, logger):
         return None
 
 
-def extract_inspections(url, logger):
+def extract_violations(url, logger):
     headers = {"X-App-Token": settings.SOCRATA_API_TOKEN}
     results = requests.get(url, headers=headers)
     status_code = results.status_code
@@ -115,13 +119,16 @@ def is_request_valid(app, conn, request):
         return None
 
 
-def load_inspections(conn, cur, data, logger):
+def load_violations(conn, cur, data, logger):
     try:
-        cur.execute("truncate table raw.inspections;")
+        logger.info('truncate table raw.fulton_inspection_violations')
+        cur.execute('truncate table raw.fulton_inspection_violations;')
         conn.commit()
-        cur.executemany(constants_sql.INSERT_INSPECTIONS_SQL, data)
+        logger.info('Inserting Fulton inspection violations into raw table')
+        cur.executemany(constants_sql.INSERT_FULTON_VIOLATIONS_SQL, data)
         conn.commit()
-        cur.execute(constants_sql.MERGE_INSPECTIONS_SQL)
+        logger.info('Merging Fulton inspection violations')
+        cur.execute(constants_sql.MERGE_FULTON_VIOLATIONS_SQL)
         conn.commit()
         return "success"
     except Exception as e:
