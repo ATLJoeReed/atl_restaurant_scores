@@ -1,10 +1,9 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 # -*- coding: utf-8 -*-
 import os
 import sys
 
-from config import constants_sql
-from utils import helpers
+from utils import constants_sql, helpers
 
 
 def process_inspections(logger):
@@ -17,12 +16,12 @@ def process_inspections(logger):
     cur = conn.cursor()
     dict_cur = helpers.get_dictionary_cursor(conn)
 
-    url = helpers.build_extract_url(logger)
+    url = helpers.build_extract_violations_url(logger)
     logger.info("Starting the extract")
-    results = helpers.extract_inspections(url, logger)
+    results = helpers.extract_violations(url, logger)
     number_results = len(results)
     logger.info(f"Extracted {number_results} records")
-    load_status = helpers.load_inspections(conn, cur, results, logger)
+    load_status = helpers.load_violations(conn, cur, results, logger)
     logger.info(f"Load status: {load_status}")
 
     geocode_updates = []
@@ -34,6 +33,8 @@ def process_inspections(logger):
         if geocode_results:
             geocode_updates.append(geocode_results)
     logger.info('GeoCoding complete')
+
+    logger.info(f'Number records {len(geocode_updates)} GeoCoded')
 
     cur.executemany(constants_sql.UPDATE_GEOCODING_SQL, geocode_updates)
     conn.commit()

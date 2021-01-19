@@ -1,8 +1,45 @@
--- drop table raw.inspections;
+-- POSTGRES
+------------------------------------------------------------------------------------------------------------------------
+-- SETUP SOME DATABASE OBJECTS...
+------------------------------------------------------------------------------------------------------------------------
+create schema food_inspections;
+alter schema food_inspections owner to dopyjhogbbiriu;
 
-create table raw.inspections
+create schema raw;
+alter schema raw owner to dopyjhogbbiriu;
+
+create schema stage;
+alter schema stage owner to dopyjhogbbiriu;
+
+set search_path to food_inspections;
+show search_path;
+
+create extension cube;
+create extension earthdistance;
+
+-- Not sure if I will be using this or not...
+-- Token validation
+-- create extension pgcrypto;
+--
+-- create table restaurants.app_settings (
+--     setting_name text,
+--     setting_value text
+-- )
+
+set search_path to raw, stage, food_inspections;
+show search_path;
+
+------------------------------------------------------------------------------------------------------------------------
+-- SETUP RAW TABLE TO IMPORT DATA INTO...
+------------------------------------------------------------------------------------------------------------------------
+
+-- drop table raw.fulton_inspection_violations;
+
+create table raw.fulton_inspection_violations
 (
 	inspection_id text,
+	inspection_item text,
+	inspection_type text,
 	facility text,
 	address text,
 	city text,
@@ -22,20 +59,24 @@ create table raw.inspections
 	prior_inspection_date text,
 	follow_up_needed text,
 	follow_up_date text,
+	foodborne_illness_risk text,
 	inspector_date_time_in text,
 	inspector_date_time_out text
 );
 
-alter table raw.inspections owner to osaevtapyrcflq;
+alter table raw.fulton_inspection_violations owner to dopyjhogbbiriu;
 
-create schema restaurants;
-alter schema restaurants owner to osaevtapyrcflq;
+-- drop table food_inspections.fulton_inspections;
 
--- drop table restaurants.inspections;
+------------------------------------------------------------------------------------------------------------------------
+-- SETUP FINAL TABLE FOR FULTON COUNTY INSPECTION RESULTS...
+------------------------------------------------------------------------------------------------------------------------
 
-create table restaurants.inspections
+-- drop table food_inspections.fulton_inspections;
+
+create table food_inspections.fulton_inspections
 (
-	inspection_id text constraint inspections_pkey primary key,
+	inspection_id text constraint fulton_inspections_pkey primary key,
 	inspection_date date,
 	permit_number text,
 	facility text,
@@ -49,14 +90,15 @@ create table restaurants.inspections
 	grade text,
 	purpose text,
 	risk_type text,
-	last_inspection_score text,
+	number_violations int,
+	last_inspection_score int,
 	last_inspection_grade text,
-	last_inspection_date timestamp,
-	prior_inspection_score text,
+	last_inspection_date date,
+	prior_inspection_score int,
 	prior_inspection_grade text,
-	prior_inspection_date timestamp,
+	prior_inspection_date date,
 	follow_up_needed boolean,
-	follow_up_date timestamp,
+	follow_up_date date,
 	inspector_date_time_in timestamp,
 	inspector_date_time_out timestamp,
     created_ymd timestamp default now(),
@@ -64,76 +106,29 @@ create table restaurants.inspections
 
 );
 
-alter table restaurants.inspections owner to osaevtapyrcflq;
+alter table food_inspections.fulton_inspections owner to dopyjhogbbiriu;
 
-create extension cube;
-create extension earthdistance;
+------------------------------------------------------------------------------------------------------------------------
+-- SETUP VIEW TO PULL ALL INSPECTIONS TOGETHER...
+-- CURRENTLY ONLY HAVE FULTON COUNTY BUT WOULD LIKE TO ADD MORE METRO ATL COUNTIES DOWN THE ROAD.
+------------------------------------------------------------------------------------------------------------------------
 
-select *
-from raw.inspections;
-
-insert into restaurants.inspections
-    (inspection_id, facility, address, city, state, zipcode, inspection_date,
-    permit_number, score, grade, purpose, risk_type, last_inspection_score,
-    last_inspection_grade, last_inspection_date, prior_inspection_score,
-    prior_inspection_grade, prior_inspection_date, follow_up_needed, follow_up_date,
-    inspector_date_time_in, inspector_date_time_out)
+create view food_inspections.vw_inspections as
 select
-    inspection_id, facility, address, city, state, zipcode, inspection_date::date,
-    permit_number, score::int, grade, purpose, risk_type, last_inspection_score,
-    last_inspection_grade, last_inspection_date::timestamp, prior_inspection_score,
-    prior_inspection_grade, prior_inspection_date::timestamp, follow_up_needed::boolean,
-    follow_up_date::timestamp, inspector_date_time_in::timestamp, inspector_date_time_out::timestamp
-from raw.inspections
-on conflict on constraint inspections_pkey
-do
-    update
-        set facility = excluded.facility,
-            address = excluded.address,
-            city = excluded.city,
-            state = excluded.state,
-            zipcode = excluded.zipcode,
-            inspection_date = excluded.inspection_date::date,
-            permit_number = excluded.permit_number,
-            score = excluded.score::int,
-            grade = excluded.grade,
-            purpose = excluded.purpose,
-            risk_type = excluded.risk_type,
-            last_inspection_score = excluded.last_inspection_score,
-            last_inspection_grade = excluded.last_inspection_grade,
-            last_inspection_date = excluded.last_inspection_date::timestamp,
-            prior_inspection_score = excluded.prior_inspection_score,
-            prior_inspection_grade = excluded.prior_inspection_grade,
-            prior_inspection_date = excluded.prior_inspection_date::timestamp,
-            follow_up_needed = excluded.follow_up_needed::boolean,
-            follow_up_date = excluded.follow_up_date::timestamp,
-            inspector_date_time_in = excluded.inspector_date_time_in::timestamp,
-            inspector_date_time_out = excluded.inspector_date_time_out::timestamp,
-            updated_ymd = now();
+    permit_number,
+    facility,
+    address,
+    city,
+    state,
+    zipcode,
+    inspection_date,
+    score,
+    latitude,
+    longitude
+from food_inspections.fulton_inspections;
 
-select *
-from restaurants.inspections;
+alter view food_inspections.vw_inspections owner to dopyjhogbbiriu;
 
-select distinct
-    permit_number, address, city, state, zipcode
-from restaurants.inspections
-where latitude is null
-    or longitude is null
-order by zipcode;
-
-select *
-from restaurants.inspections;
-
-update restaurants.inspections
-    set latitude = null,
-        longitude = null;
-
-
--- Token validation
-create extension pgcrypto;
-
-create table restaurants.app_settings (
-    setting_name text,
-    setting_value text
-)
-
+------------------------------------------------------------------------------------------------------------------------
+-- THE END...
+------------------------------------------------------------------------------------------------------------------------
