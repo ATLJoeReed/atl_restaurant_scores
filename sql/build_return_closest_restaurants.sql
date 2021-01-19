@@ -1,5 +1,7 @@
 -- drop function food_inspections.return_closest_restaurants;
 
+show search_path;
+
 create or replace function food_inspections.return_closest_restaurants(
     in user_latitude numeric,
     in user_longitude numeric,

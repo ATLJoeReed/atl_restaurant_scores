@@ -11,8 +11,23 @@ alter schema raw owner to dopyjhogbbiriu;
 create schema stage;
 alter schema stage owner to dopyjhogbbiriu;
 
+set search_path to food_inspections;
+show search_path;
+
 create extension cube;
 create extension earthdistance;
+
+-- Not sure if I will be using this or not...
+-- Token validation
+-- create extension pgcrypto;
+--
+-- create table restaurants.app_settings (
+--     setting_name text,
+--     setting_value text
+-- )
+
+set search_path to raw, stage, food_inspections;
+show search_path;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- SETUP RAW TABLE TO IMPORT DATA INTO...
@@ -57,7 +72,7 @@ alter table raw.fulton_inspection_violations owner to dopyjhogbbiriu;
 -- SETUP FINAL TABLE FOR FULTON COUNTY INSPECTION RESULTS...
 ------------------------------------------------------------------------------------------------------------------------
 
--- drop table food_inspections.fulton_inspections
+-- drop table food_inspections.fulton_inspections;
 
 create table food_inspections.fulton_inspections
 (
@@ -93,8 +108,6 @@ create table food_inspections.fulton_inspections
 
 alter table food_inspections.fulton_inspections owner to dopyjhogbbiriu;
 
-
-
 ------------------------------------------------------------------------------------------------------------------------
 -- SETUP VIEW TO PULL ALL INSPECTIONS TOGETHER...
 -- CURRENTLY ONLY HAVE FULTON COUNTY BUT WOULD LIKE TO ADD MORE METRO ATL COUNTIES DOWN THE ROAD.
@@ -116,80 +129,6 @@ from food_inspections.fulton_inspections;
 
 alter view food_inspections.vw_inspections owner to dopyjhogbbiriu;
 
-select *
-from food_inspections.vw_inspections;
-
-select distinct
-    permit_number, address, city, state, zipcode
-from food_inspections.vw_inspections
-where latitude is null
-    or longitude is null
-order by zipcode;
-
-select *
-from food_inspections.vw_inspections;
-
--- update food_inspections.vw_inspections
---     set latitude = null,
---         longitude = null;
-
-select * from food_inspections.return_closest_restaurants(33.6880178, -84.42331870000001, 50);
-
---Home: 33.6880178, -84.42331870000001
-with restaurant_scores as
-(
-    select distinct on (permit_number)
-        facility as restaurant,
-        address,
-        city,
-        state,
-        zipcode,
-        inspection_date,
-        score,
-        latitude,
-        longitude,
-        cast(earth_distance(ll_to_earth(33.6880178 , -84.42331870000001),
-                 ll_to_earth(latitude, longitude)) * .0006213712 as numeric(10,2)) as "distance"
-    from food_inspections.vw_inspections
-    order by permit_number, inspection_date desc
-)
-select *
-from restaurant_scores
-where restaurant ilike '%Landmark%'
-order by distance asc
-limit 200;
-
-
-update food_inspections.fulton_inspections
-    set latitude = %(lat)s,
-        longitude = %(lng)s
-where permit_number = %(permit_number)s
-    and address = %(address)s
-    and city = %(city)s
-    and state = %(state)s
-    and zipcode = %(zipcode)s;
-
-select distinct
-    permit_number,
-    facility,
-    address,
-    city,
-    state,
-    zipcode,
-    latitude,
-    longitude
-from food_inspections.fulton_inspections
-where latitude is not null
-    and longitude is not null
-order by permit_number;
-
-
-
--- Token validation
-create extension pgcrypto;
-
-create table restaurants.app_settings (
-    setting_name text,
-    setting_value text
-)
-
+------------------------------------------------------------------------------------------------------------------------
+-- THE END...
+------------------------------------------------------------------------------------------------------------------------
