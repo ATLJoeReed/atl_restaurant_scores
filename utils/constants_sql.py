@@ -1,20 +1,14 @@
 #!/usr/bin/python3.9
 # -*- coding: utf-8 -*-
-CHECK_TOKEN = """
-select exists(
-    select 1
-    from restaurants.app_settings
-    where setting_name = %(token_type)s
-        AND setting_value = CRYPT(%(token)s, setting_value)
-);
-"""
-
 FETCH_SCORES = """
 select
     restaurant,
     to_char(inspection_date, 'MM/DD/YY') as inspection_date,
     score
 from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
+"""
+
+INSERT_FULTON_INSPECTIONS_SQL = """
 """
 
 INSERT_FULTON_VIOLATIONS_SQL = """
@@ -31,6 +25,9 @@ values (%(inspection_id)s, %(item)s, %(type)s, %(facility)s, %(address)s, %(city
     %(follow_up_date)s, %(foodborne_illness_risk)s, %(date_time_in)s, 
     %(date_time_out)s)
 """ # noqa
+
+MERGE_FULTON_INSPECTIONS_SQL = """
+"""
 
 MERGE_FULTON_VIOLATIONS_SQL = """
 insert into food_inspections.fulton_inspections

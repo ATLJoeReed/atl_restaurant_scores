@@ -12,9 +12,15 @@ from utils import constants_sql, settings
 from utils.packet_handler import PacketHandler
 
 
-def build_extract_violations_url(logger):
+def build_fulton_extract_url(extraction_type, logger):
     start_date, end_date = get_date_range()
-    base_url = settings.SOCRATA_BASE_URL
+    if extraction_type == 'inspections':
+        base_url = settings.SOCRATA_BASE_INSPECTIONS_URL
+    elif extraction_type == 'violations':
+        base_url = settings.SOCRATA_BASE_VIOLATIONS_URL
+    else:
+        logger.error(f'Invalid extraction_type: {extraction_type}')
+        return None
     url = f"{base_url}$where=date_trunc_ymd(date) between '{start_date}' and '{end_date}'" # noqa
     logger.info(f"Extract URL: {url}")
     return url
@@ -119,7 +125,11 @@ def is_request_valid(app, conn, request):
         return None
 
 
-def load_violations(conn, cur, data, logger):
+def load_fulton_inspections(conn, cur, data, logger):
+    pass
+
+
+def load_fulton_violations(conn, cur, data, logger):
     try:
         logger.info('truncate table raw.fulton_inspection_violations')
         cur.execute('truncate table raw.fulton_inspection_violations;')

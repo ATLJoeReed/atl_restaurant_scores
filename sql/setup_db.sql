@@ -30,7 +30,7 @@ set search_path to raw, stage, food_inspections;
 show search_path;
 
 ------------------------------------------------------------------------------------------------------------------------
--- SETUP RAW TABLE TO IMPORT DATA INTO...
+-- SETUP RAW TABLES TO IMPORT DATA INTO...
 ------------------------------------------------------------------------------------------------------------------------
 
 -- drop table raw.fulton_inspection_violations;
@@ -66,7 +66,37 @@ create table raw.fulton_inspection_violations
 
 alter table raw.fulton_inspection_violations owner to dopyjhogbbiriu;
 
--- drop table food_inspections.fulton_inspections;
+
+-- drop table raw.fulton_inspections;
+
+create table raw.fulton_inspections
+(
+	inspection_id text,
+	facility text,
+	address text,
+	city text,
+	state text,
+	zipcode text,
+	inspection_date text,
+	permit_number text,
+	score text,
+	grade text,
+	purpose text,
+	risk_type text,
+	last_inspection_score text,
+	last_inspection_grade text,
+	last_inspection_date text,
+	prior_inspection_score text,
+	prior_inspection_grade text,
+	prior_inspection_date text,
+	follow_up_needed text,
+	follow_up_date text,
+	inspector_date_time_in text,
+	inspector_date_time_out text,
+	lat_long text
+);
+
+alter table raw.fulton_inspections owner to dopyjhogbbiriu;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- SETUP FINAL TABLE FOR FULTON COUNTY INSPECTION RESULTS...
@@ -76,42 +106,58 @@ alter table raw.fulton_inspection_violations owner to dopyjhogbbiriu;
 
 create table food_inspections.fulton_inspections
 (
-	inspection_id text constraint fulton_inspections_pkey primary key,
-	inspection_date date,
-	permit_number text,
-	facility text,
-	address text,
-	city text,
-	state text,
-	zipcode text,
+    inspection_id text constraint fulton_inspections_pkey primary key,
+    inspection_date date,
+    permit_number text,
+    facility text,
+    address text,
+    city text,
+    state text,
+    zipcode text,
     latitude numeric(12,7),
     longitude numeric(12,7),
-	score int,
-	grade text,
-	purpose text,
-	risk_type text,
-	number_violations int,
-	last_inspection_score int,
-	last_inspection_grade text,
-	last_inspection_date date,
-	prior_inspection_score int,
-	prior_inspection_grade text,
-	prior_inspection_date date,
-	follow_up_needed boolean,
-	follow_up_date date,
-	inspector_date_time_in timestamp,
-	inspector_date_time_out timestamp,
+    score int,
+    grade text,
+    purpose text,
+    risk_type text,
+    last_inspection_score int,
+    last_inspection_grade text,
+    last_inspection_date date,
+    prior_inspection_score int,
+    prior_inspection_grade text,
+    prior_inspection_date date,
+    follow_up_needed boolean,
+    follow_up_date date,
+    inspector_date_time_in timestamp,
+    inspector_date_time_out timestamp,
     created_ymd timestamp default now(),
     updated_ymd timestamp default now()
-
 );
 
 alter table food_inspections.fulton_inspections owner to dopyjhogbbiriu;
+
+-- drop table food_inspections.fulton_violations;
+
+create table food_inspections.fulton_violations
+(
+    inspection_id text,
+    inspection_item text,
+    inspection_type text,
+    foodborne_illness_risk boolean,
+    num_item_violations int,
+    created_ymd timestamp default now(),
+    updated_ymd timestamp default now(),
+    primary key(inspection_id, inspection_item, inspection_type, foodborne_illness_risk)
+);
+
+alter table food_inspections.fulton_violations owner to dopyjhogbbiriu;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- SETUP VIEW TO PULL ALL INSPECTIONS TOGETHER...
 -- CURRENTLY ONLY HAVE FULTON COUNTY BUT WOULD LIKE TO ADD MORE METRO ATL COUNTIES DOWN THE ROAD.
 ------------------------------------------------------------------------------------------------------------------------
+
+-- drop view food_inspections.vw_inspections;
 
 create view food_inspections.vw_inspections as
 select

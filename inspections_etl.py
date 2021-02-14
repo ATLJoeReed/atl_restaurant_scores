@@ -16,12 +16,20 @@ def process_inspections(logger):
     cur = conn.cursor()
     dict_cur = helpers.get_dictionary_cursor(conn)
 
-    url = helpers.build_extract_violations_url(logger)
-    logger.info("Starting the extract")
+    logger.info("Starting Fulton inspections extraction")
+    url = helpers.build_fulton_extract_url('inspections', logger)
     results = helpers.extract_violations(url, logger)
     number_results = len(results)
-    logger.info(f"Extracted {number_results} records")
-    load_status = helpers.load_violations(conn, cur, results, logger)
+    logger.info(f"Extracted {number_results} inspection records")
+    load_status = helpers.load_fulton_inspections(conn, cur, results, logger)
+    logger.info(f"Load status: {load_status}")
+
+    logger.info("Starting Fulton violations extraction")
+    url = helpers.build_fulton_extract_url('violations', logger)
+    results = helpers.extract_violations(url, logger)
+    number_results = len(results)
+    logger.info(f"Extracted {number_results} violations records")
+    load_status = helpers.load_fulton_violations(conn, cur, results, logger)
     logger.info(f"Load status: {load_status}")
 
     geocode_updates = []
@@ -39,9 +47,9 @@ def process_inspections(logger):
     cur.executemany(constants_sql.UPDATE_GEOCODING_SQL, geocode_updates)
     conn.commit()
 
-    conn.close()
     cur.close()
     dict_cur.close()
+    conn.close()
 
 
 if __name__ == '__main__':
