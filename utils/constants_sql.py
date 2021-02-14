@@ -9,7 +9,18 @@ from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
 """
 
 INSERT_FULTON_INSPECTIONS_SQL = """
-"""
+insert into raw.fulton_inspection_violations (inspection_id, facility, 
+    address, city, state, zipcode, inspection_date, permit_number, score, 
+    grade, purpose, risk_type, last_inspection_score, last_inspection_grade, 
+    last_inspection_date, prior_inspection_score, prior_inspection_grade, 
+    prior_inspection_date, follow_up_needed, follow_up_date, 
+    inspector_date_time_in, inspector_date_time_out) 
+values (%(inspection_id)s, %(facility)s, %(address)s, %(city)s, %(state)s, 
+    %(zipcode)s, %(date)s, %(permit_number)s, %(score)s, %(grade)s, 
+    %(purpose)s, %(risk_type)s, %(last_score)s, %(last_grade)s, %(last_date)s,
+    %(prior_score)s, %(prior_grade)s, %(prior_date)s, %(follow_up_needed)s, 
+    %(follow_up_date)s, %(date_time_in)s, %(date_time_out)s)
+""" # noqa
 
 INSERT_FULTON_VIOLATIONS_SQL = """
 insert into raw.fulton_inspection_violations (inspection_id, inspection_item, 
@@ -27,12 +38,9 @@ values (%(inspection_id)s, %(item)s, %(type)s, %(facility)s, %(address)s, %(city
 """ # noqa
 
 MERGE_FULTON_INSPECTIONS_SQL = """
-"""
-
-MERGE_FULTON_VIOLATIONS_SQL = """
 insert into food_inspections.fulton_inspections
     (inspection_id, inspection_date, permit_number, facility, address, city, state, zipcode,
-    score, grade, purpose, risk_type, number_violations, last_inspection_score, last_inspection_grade,
+    score, grade, purpose, risk_type, last_inspection_score, last_inspection_grade,
     last_inspection_date, prior_inspection_score, prior_inspection_grade, prior_inspection_date,
     follow_up_needed, follow_up_date, inspector_date_time_in, inspector_date_time_out)
 select
@@ -44,29 +52,21 @@ select
     city,
     state,
     zipcode,
-    nullif(score, '')::int,
+    score::int,
     grade,
     purpose,
     risk_type,
-    count(*) as number_violations,
-    nullif(last_inspection_score, '')::int,
+    last_inspection_score::int,
     last_inspection_grade,
     last_inspection_date::date as last_inspection_date,
-    nullif(prior_inspection_score, '')::int,
+    prior_inspection_score::int,
     prior_inspection_grade,
-    prior_inspection_date::date as last_inspection_date,
+    prior_inspection_date::date as prior_inspection_date,
     follow_up_needed::boolean as follow_up_needed,
     follow_up_date::date as follow_up_date,
     inspector_date_time_in::timestamp,
     inspector_date_time_out::timestamp
-from raw.fulton_inspection_violations
-group by inspection_id, inspection_date::date, permit_number, facility, address, 
-    city, state, zipcode, nullif(score, '')::int, grade, purpose, risk_type, 
-    nullif(last_inspection_score, '')::int, last_inspection_grade, 
-    last_inspection_date::date, nullif(prior_inspection_score, '')::int,
-    prior_inspection_grade, prior_inspection_date::date, follow_up_needed::boolean,
-    follow_up_date::date, inspector_date_time_in::timestamp, 
-    inspector_date_time_out::timestamp
+from raw.fulton_inspections
 on conflict on constraint fulton_inspections_pkey
 do
     update
@@ -81,7 +81,6 @@ do
             grade = excluded.grade,
             purpose = excluded.purpose,
             risk_type = excluded.risk_type,
-            number_violations = excluded.number_violations,
             last_inspection_score = excluded.last_inspection_score::int,
             last_inspection_grade = excluded.last_inspection_grade,
             last_inspection_date = excluded.last_inspection_date::date,
@@ -92,6 +91,29 @@ do
             follow_up_date = excluded.follow_up_date::date,
             inspector_date_time_in = excluded.inspector_date_time_in::timestamp,
             inspector_date_time_out = excluded.inspector_date_time_out::timestamp,
+            updated_ymd = now();
+""" # noqa
+
+MERGE_FULTON_VIOLATIONS_SQL = """
+insert into food_inspections.fulton_violations
+    (inspection_id, inspection_item, inspection_type, foodborne_illness_risk, num_item_violations)
+select
+    inspection_id,
+    inspection_item,
+    coalesce(inspection_type, '-') as inspection_type,
+    foodborne_illness_risk::boolean,
+    count(*) as num_item_violations
+from raw.fulton_inspection_violations
+where inspection_date::date >= '2018-01-01'
+group by inspection_id, inspection_item, coalesce(inspection_type, '-'), foodborne_illness_risk
+on conflict on constraint fulton_violations_pkey
+do
+    update
+        set inspection_id = excluded.inspection_id,
+            inspection_item = excluded.inspection_item,
+            inspection_type = excluded.inspection_type,
+            foodborne_illness_risk = excluded.foodborne_illness_risk,
+            num_item_violations = excluded.num_item_violations,
             updated_ymd = now();
 """ # noqa
 
