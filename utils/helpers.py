@@ -14,6 +14,7 @@ from utils.packet_handler import PacketHandler
 
 def build_fulton_extract_url(extraction_type, logger):
     start_date, end_date = get_date_range()
+    where_clause = f"date_trunc_ymd(date) between '{start_date}' and '{end_date}'" # noqa
     if extraction_type == 'inspections':
         base_url = settings.SOCRATA_BASE_INSPECTIONS_URL
     elif extraction_type == 'violations':
@@ -21,8 +22,8 @@ def build_fulton_extract_url(extraction_type, logger):
     else:
         logger.error(f'Invalid extraction_type: {extraction_type}')
         return None
-    url = f"{base_url}$where=date_trunc_ymd(date) between '{start_date}' and '{end_date}'" # noqa
-    logger.info(f"Extract URL: {url}")
+    url = f"{base_url}$where={where_clause}"
+    logger.info(f"Extract where clause: {where_clause}")
     return url
 
 
@@ -126,7 +127,20 @@ def is_request_valid(app, conn, request):
 
 
 def load_fulton_inspections(conn, cur, data, logger):
-    pass
+    try:
+        logger.info('truncate table raw.fulton_inspections')
+        cur.execute('truncate table raw.fulton_inspections;')
+        conn.commit()
+        logger.info('Inserting Fulton inspections into raw table')
+        cur.executemany(constants_sql.INSERT_FULTON_INSPECTIONS_SQL, data)
+        conn.commit()
+        logger.info('Merging Fulton inspections')
+        cur.execute(constants_sql.MERGE_FULTON_INSPECTIONS_SQL)
+        conn.commit()
+        return "success"
+    except Exception as e:
+        logger.error(f"Loading inspections into database: {e}")
+        return "failure"
 
 
 def load_fulton_violations(conn, cur, data, logger):
@@ -142,7 +156,7 @@ def load_fulton_violations(conn, cur, data, logger):
         conn.commit()
         return "success"
     except Exception as e:
-        logger.error(f"Loading inspections into database: {e}")
+        logger.error(f"Loading violations into database: {e}")
         return "failure"
 
 
