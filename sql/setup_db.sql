@@ -33,9 +33,9 @@ show search_path;
 -- SETUP RAW TABLES TO IMPORT DATA INTO...
 ------------------------------------------------------------------------------------------------------------------------
 
--- drop table raw.fulton_inspection_violations;
+-- drop table raw.fulton_violations;
 
-create table raw.fulton_inspection_violations
+create table raw.fulton_violations
 (
 	inspection_id text,
 	inspection_item text,
@@ -64,8 +64,7 @@ create table raw.fulton_inspection_violations
 	inspector_date_time_out text
 );
 
-alter table raw.fulton_inspection_violations owner to dopyjhogbbiriu;
-
+alter table raw.fulton_violations owner to dopyjhogbbiriu;
 
 -- drop table raw.fulton_inspections;
 

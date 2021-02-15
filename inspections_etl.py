@@ -23,6 +23,8 @@ def process_inspections(logger):
     logger.info(f"Extracted {number_results} inspection records")
     load_status = helpers.load_fulton_inspections(conn, cur, results, logger)
     logger.info(f"Load status: {load_status}")
+    if load_status != 'success':
+        helpers.exit_out(cur, dict_cur, conn, logger)
 
     logger.info("Starting Fulton violations extraction")
     url = helpers.build_fulton_extract_url('violations', logger)
@@ -31,6 +33,8 @@ def process_inspections(logger):
     logger.info(f"Extracted {number_results} violations records")
     load_status = helpers.load_fulton_violations(conn, cur, results, logger)
     logger.info(f"Load status: {load_status}")
+    if load_status != 'success':
+        helpers.exit_out(cur, dict_cur, conn, logger)
 
     geocode_updates = []
     results = helpers.get_records2geocode(dict_cur, logger)

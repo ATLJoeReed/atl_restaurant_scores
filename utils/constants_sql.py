@@ -9,7 +9,7 @@ from return_closest_restaurants(%(latitude)s, %(longitude)s, %(num_scores)s);
 """
 
 INSERT_FULTON_INSPECTIONS_SQL = """
-insert into raw.fulton_inspection_violations (inspection_id, facility, 
+insert into raw.fulton_inspections (inspection_id, facility, 
     address, city, state, zipcode, inspection_date, permit_number, score, 
     grade, purpose, risk_type, last_inspection_score, last_inspection_grade, 
     last_inspection_date, prior_inspection_score, prior_inspection_grade, 
@@ -56,10 +56,10 @@ select
     grade,
     purpose,
     risk_type,
-    last_inspection_score::int,
+    nullif(last_inspection_score, '')::int,
     last_inspection_grade,
     last_inspection_date::date as last_inspection_date,
-    prior_inspection_score::int,
+    nullif(prior_inspection_score, '')::int,
     prior_inspection_grade,
     prior_inspection_date::date as prior_inspection_date,
     follow_up_needed::boolean as follow_up_needed,

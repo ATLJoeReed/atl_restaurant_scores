@@ -47,9 +47,7 @@ declare
 
 end;
 $body$
-  language plpgsql volatile
-  cost 100
-  rows 1000;
+  language plpgsql stable;
 
  -- note: you need to change the owner to your database login...
 alter function food_inspections.return_closest_restaurants(numeric, numeric, integer)

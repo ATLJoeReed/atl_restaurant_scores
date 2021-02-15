@@ -50,6 +50,14 @@ def check_results(data, fields):
     return data
 
 
+def exit_out(cur, dict_cur, conn, logger):
+    logger.error('Exiting program')
+    cur.close()
+    dict_cur.close()
+    conn.close()
+    sys.exit(1)
+
+
 def extract_geocodes(data, logger):
     url = build_geocode_url(data)
     try:
