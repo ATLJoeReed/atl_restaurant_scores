@@ -153,13 +153,13 @@ def load_fulton_inspections(conn, cur, data, logger):
 
 def load_fulton_violations(conn, cur, data, logger):
     try:
-        logger.info('truncate table raw.fulton_inspection_violations')
-        cur.execute('truncate table raw.fulton_inspection_violations;')
+        logger.info('truncate table raw.fulton_violations')
+        cur.execute('truncate table raw.fulton_violations;')
         conn.commit()
-        logger.info('Inserting Fulton inspection violations into raw table')
+        logger.info('Inserting Fulton violations into raw table')
         cur.executemany(constants_sql.INSERT_FULTON_VIOLATIONS_SQL, data)
         conn.commit()
-        logger.info('Merging Fulton inspection violations')
+        logger.info('Merging Fulton violations')
         cur.execute(constants_sql.MERGE_FULTON_VIOLATIONS_SQL)
         conn.commit()
         return "success"

@@ -23,7 +23,7 @@ values (%(inspection_id)s, %(facility)s, %(address)s, %(city)s, %(state)s,
 """ # noqa
 
 INSERT_FULTON_VIOLATIONS_SQL = """
-insert into raw.fulton_inspection_violations (inspection_id, inspection_item, 
+insert into raw.fulton_violations (inspection_id, inspection_item, 
     inspection_type, facility, address, city, state, zipcode, inspection_date, 
     permit_number, score, grade, purpose, risk_type, last_inspection_score, 
     last_inspection_grade, last_inspection_date, prior_inspection_score, 
@@ -103,8 +103,7 @@ select
     coalesce(inspection_type, '-') as inspection_type,
     foodborne_illness_risk::boolean,
     count(*) as num_item_violations
-from raw.fulton_inspection_violations
-where inspection_date::date >= '2018-01-01'
+from raw.fulton_violations
 group by inspection_id, inspection_item, coalesce(inspection_type, '-'), foodborne_illness_risk
 on conflict on constraint fulton_violations_pkey
 do
