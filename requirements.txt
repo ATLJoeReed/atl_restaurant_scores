@@ -1,4 +1,4 @@
 flake8==3.8.4
 jupyterlab==3.0.17
 psycopg2-binary==2.8.6
-requests==2.25.1
+requests==2.31.0
